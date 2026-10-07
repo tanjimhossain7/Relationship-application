@@ -1,5 +1,5 @@
-// Daily games. Every game is "lower score wins" (fewer guesses / fewer mistakes)
-// unless `better` says otherwise. A day only counts toward the head-to-head when
+// Daily games. Most are "lower score wins" (fewer guesses / fewer mistakes);
+// Krillion is higher wins. A day only counts toward the head-to-head when
 // both of you played it, so skipping a day never costs you anything.
 
 export type GameId = 'krillion' | 'wordle' | 'globle' | 'spotle' | 'spotle_movie' | 'connections'
@@ -51,9 +51,9 @@ export const GAMES: Game[] = [
     id: 'krillion',
     name: 'Krillion',
     emoji: '🦐',
-    unit: 'score',
-    better: 'lower',
-    failScore: 99,
+    unit: 'points',
+    better: 'higher',
+    failScore: 0,
     hint: 'Paste your share text or type your score',
     parse: (t) => {
       const n = firstNumber(t)
