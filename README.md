@@ -8,6 +8,7 @@ A private little app for Tanzim and Azrina (together since April 22, 2024). It's
 - **Weekly picture**: each of you picks one picture a week for the other. It's the first thing they see, and they can't get into the app until they open it. Picks older than 4 weeks are deleted automatically.
 - **Music**: send each other Spotify links (with a daily prompt), share what you're into lately. Links open in Spotify. Optional "Connect Spotify" adds one-tap Now playing / Recently played; nothing is ever shared unless you tap share.
 - **Moments**: birthdays, tournaments, dates, parties, trips. Countdowns for what's coming up, plus Memories: "this time last year", random memory, this month in other years. **Bulk add** lets you paste lots of past events at once (`2024-05-10 | Title | type | notes`).
+- **Propose a date**: fill in what, where and when. The other person gets it as a pop-up next time they open the app and taps Yes or Maybe, I have to check. A yes drops it into Moments, and the proposer gets told the answer.
 - **Photobooth**: every photobooth strip, upload many at once.
 - **Games**: Krillion, Wordle, Globle, Spotle, Spotle Movie, Connections. Paste your share text and it reads the score (or just type it). Head-to-head only counts days you both played, so skipping never costs you.
 - **Thoughtboard**: random thoughts for the other one to find, with reactions and unread badges.
@@ -21,7 +22,7 @@ A private little app for Tanzim and Azrina (together since April 22, 2024). It's
 ### 1. Supabase (the shared database and photo storage)
 
 1. Go to [supabase.com](https://supabase.com) → **New project**. Pick any name, set a database password (you won't need it in the app), choose the region closest to you.
-2. When it's ready, open **SQL Editor → New query**, paste everything from [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), and press **Run**. This creates all the tables and the `photos` storage bucket.
+2. When it's ready, open **SQL Editor → New query**, paste everything from [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), and press **Run**. Then do the same with [`0002_date_ideas.sql`](supabase/migrations/0002_date_ideas.sql). This creates all the tables and the `photos` storage bucket.
 3. Open **Project Settings → API** (or **Connect**) and keep two values handy:
    - **Project URL** (looks like `https://abcd1234.supabase.co`)
    - **anon / publishable key** (the long public one, *not* the `service_role` secret)

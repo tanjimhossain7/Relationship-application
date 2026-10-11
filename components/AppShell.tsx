@@ -7,6 +7,7 @@ import { ToastProvider } from './ui'
 import Nav from './Nav'
 import PersonPicker from './PersonPicker'
 import WeeklyGate from './WeeklyGate'
+import { DateIdeaPopup } from './DateIdeas'
 import StreakPopup from './StreakPopup'
 import Surprise, { type SurpriseKind } from './Surprise'
 import { list, upsert, remove, removeImage, isDemo } from '@/lib/db'
@@ -21,6 +22,7 @@ const SURPRISE_EVERY_MS = 6 * 86400000
 export default function AppShell({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false)
   const [me, setMe] = useState<Person | null>(null)
+  const [weeklyDone, setWeeklyDone] = useState(false)
   const [gateDone, setGateDone] = useState(false)
   const [milestone, setMilestone] = useState<Milestone | null>(null)
   const [surprise, setSurprise] = useState<SurpriseKind | null>(null)
@@ -84,6 +86,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   const choose = useCallback((p: Person) => {
     localStorage.setItem(ME_KEY, p)
+    setWeeklyDone(false)
     setGateDone(false)
     setMe(p)
   }, [])
@@ -101,7 +104,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <MeContext.Provider value={{ me, switchPerson }}>
       <ToastProvider>
         {isDemo && <DemoBanner />}
-        {!gateDone && <WeeklyGate me={me} onDone={() => setGateDone(true)} />}
+        {!weeklyDone && <WeeklyGate me={me} onDone={() => setWeeklyDone(true)} />}
+        {weeklyDone && !gateDone && <DateIdeaPopup me={me} onDone={() => setGateDone(true)} />}
         {gateDone && (
           <>
             {children}

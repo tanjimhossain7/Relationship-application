@@ -7,6 +7,7 @@ import { EVENT_TYPES, onThisDay, parseBulk, pastEvents, typeEmoji, upcoming, typ
 import { useMe, useRows } from '@/lib/hooks'
 import { NAMES, type Person } from '@/lib/people'
 import { Empty, Field, PhotoPicker, Sheet, useToast } from '@/components/ui'
+import { ProposeDateSheet } from '@/components/DateIdeas'
 
 type Tab = 'upcoming' | 'memories' | 'timeline'
 
@@ -16,6 +17,7 @@ export default function MomentsPage() {
   const [editing, setEditing] = useState<EventRow | 'new' | null>(null)
   const [viewing, setViewing] = useState<EventRow | null>(null)
   const [importing, setImporting] = useState(false)
+  const [proposing, setProposing] = useState(false)
 
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get('tab')
@@ -29,9 +31,14 @@ export default function MomentsPage() {
           <h1>Moments</h1>
           <p className="sub">Big days, small days, all of it</p>
         </div>
-        <button className="btn small ghost" onClick={() => setImporting(true)}>
-          Bulk add
-        </button>
+        <div className="row" style={{ gap: 8 }}>
+          <button className="btn small" onClick={() => setProposing(true)}>
+            💘 Propose
+          </button>
+          <button className="btn small ghost" onClick={() => setImporting(true)}>
+            Bulk add
+          </button>
+        </div>
       </header>
 
       <div className="seg">
@@ -78,6 +85,7 @@ export default function MomentsPage() {
           events.reload()
         }}
       />
+      <ProposeDateSheet open={proposing} onClose={() => setProposing(false)} />
       <BulkSheet open={importing} onClose={() => setImporting(false)} onSaved={events.reload} />
     </main>
   )

@@ -8,6 +8,7 @@ import { onThisDay, typeEmoji, upcoming, type EventRow } from '@/lib/events'
 import { useMe, useRows } from '@/lib/hooks'
 import { NAMES, STARTED_DATING, other } from '@/lib/people'
 import { Field, PhotoPicker, Sheet, useToast } from '@/components/ui'
+import { DateIdeasCard } from '@/components/DateIdeas'
 
 type Pick = { id: string; chooser: string; for_person: string; image_path: string; caption: string | null; seen_at: string | null; week_start: string }
 type Song = { id: string; from_person: string; to_person: string | null; title: string | null; kind: string; seen_at: string | null }
@@ -96,6 +97,8 @@ export default function Home() {
           <span style={{ color: 'var(--accent)' }}>→</span>
         </button>
       )}
+
+      <DateIdeasCard />
 
       {newSongs.length > 0 && (
         <Link href="/music" className="card row pressable new">
