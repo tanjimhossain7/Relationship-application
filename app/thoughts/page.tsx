@@ -9,7 +9,6 @@ import { Empty, useToast } from '@/components/ui'
 
 type Thought = { id: string; person: Person; body: string; reaction: string | null; seen_at: string | null; created_at: string }
 
-const STARTERS = ['hmm it’s so interesting that', 'random thought:', 'not to be dramatic but', 'shower thought:', 'here is a diabolical hypothetical:', 'i was just thinking about']
 const REACTIONS = ['❤️', '😂', '🤯', '🥹', '🤔', '💀']
 
 export default function ThoughtsPage() {
@@ -18,7 +17,6 @@ export default function ThoughtsPage() {
   const thoughts = useRows<Thought>('thoughts', { order: { column: 'created_at', ascending: false } })
   const [body, setBody] = useState('')
   const [busy, setBusy] = useState(false)
-  const [starter] = useState(() => STARTERS[Math.floor(Math.random() * STARTERS.length)])
   const [filter, setFilter] = useState<'all' | Person>('all')
 
   // Mark the other person's thoughts as read after a moment on the page.
@@ -67,7 +65,7 @@ export default function ThoughtsPage() {
           rows={3}
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder={`${starter}…`}
+          placeholder="Here is a diabolical hypothetical…"
           style={{ background: 'transparent', border: 0, padding: 4, fontSize: 17 }}
           maxLength={1000}
         />
