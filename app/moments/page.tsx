@@ -58,7 +58,7 @@ export default function MomentsPage() {
       {events.loading ? (
         <div className="skeleton" style={{ height: 160 }} />
       ) : tab === 'upcoming' ? (
-        <UpcomingList items={upcoming(events.rows)} onOpen={(e) => setViewing(e.id === 'anniversary' ? null : e)} />
+        <UpcomingList items={upcoming(events.rows)} onOpen={(e) => setViewing(e.id === 'anniversary' || e.id === 'monthiversary' ? null : e)} />
       ) : tab === 'memories' ? (
         <Memories events={events.rows} onOpen={setViewing} />
       ) : (
@@ -94,10 +94,13 @@ export default function MomentsPage() {
 }
 
 function UpcomingList({ items, onOpen }: { items: Upcoming[]; onOpen: (e: Upcoming) => void }) {
-  if (items.length <= 1 && items[0]?.id === 'anniversary') {
+  const real = items.filter((e) => e.id !== 'anniversary' && e.id !== 'monthiversary')
+  if (real.length === 0) {
     return (
       <div className="stack">
-        <EventCard e={items[0]} onOpen={() => {}} />
+        {items.map((e) => (
+          <EventCard key={e.id} e={e} onOpen={() => {}} />
+        ))}
         <Empty emoji="🗓️" title="Nothing planned yet" sub="Add birthdays, tournaments, dates, parties, anything" />
       </div>
     )

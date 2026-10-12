@@ -41,6 +41,32 @@ export const ANNIVERSARY: EventRow = {
 
 export type Upcoming = EventRow & { on: string; years?: number }
 
+/** Built-in monthiversary: the next 22nd (April's is the real anniversary). */
+export function monthiversary(from = today()): Upcoming {
+  const start = parseYmd(STARTED_DATING)
+  const d = parseYmd(from)
+  let y = d.getFullYear()
+  let m = d.getMonth()
+  if (d.getDate() > start.getDate()) m++
+  if (m % 12 === start.getMonth()) m++
+  y += Math.floor(m / 12)
+  m %= 12
+  const on = `${y}-${String(m + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`
+  const months = (y - start.getFullYear()) * 12 + (m - start.getMonth())
+  return {
+    id: 'monthiversary',
+    title: `Monthiversary · ${months} months`,
+    date: on,
+    end_date: null,
+    type: 'milestone',
+    notes: null,
+    yearly: false,
+    image_path: null,
+    created_by: null,
+    on,
+  }
+}
+
 export function upcoming(events: EventRow[], from = today()): Upcoming[] {
   const out: Upcoming[] = []
   for (const e of [ANNIVERSARY, ...events]) {
@@ -51,6 +77,7 @@ export function upcoming(events: EventRow[], from = today()): Upcoming[] {
       out.push({ ...e, on: e.date < from ? from : e.date })
     }
   }
+  out.push(monthiversary(from))
   return out.sort((a, b) => a.on.localeCompare(b.on))
 }
 

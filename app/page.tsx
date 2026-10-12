@@ -10,6 +10,7 @@ import { NAMES, STARTED_DATING, other } from '@/lib/people'
 import { Field, PhotoPicker, Sheet, useToast } from '@/components/ui'
 import { DateIdeasCard } from '@/components/DateIdeas'
 import Icon, { type IconName } from '@/components/Icon'
+import DietCoke from '@/components/DietCoke'
 import { board, type Score } from '@/lib/games'
 import { byFavorite, groupPlaces, type Visit } from '@/lib/eats'
 import { countNew } from '@/lib/seen'
@@ -58,8 +59,8 @@ export default function Home() {
         </div>
         <div className="row">
           {streak ? (
-            <span className="pill accent">
-              <Icon name="flame" size={14} /> {streak}
+            <span className="pill accent" title={`${streak} day Diet Coke streak`} style={{ padding: '2px 10px 2px 6px' }}>
+              <DietCoke height={28} /> {streak}
             </span>
           ) : null}
           <Link href="/more" className="icon-btn" aria-label="More">
