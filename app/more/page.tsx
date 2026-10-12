@@ -25,14 +25,14 @@ export default function MorePage() {
       <div className="stack-sm">
         <Link href="/music" className="card tight row pressable">
           <span style={{ fontSize: 22 }}>🎧</span>
-          <span className="grow" style={{ fontWeight: 800 }}>
+          <span className="grow" style={{ fontWeight: 600 }}>
             Music
           </span>
           <span className="faint">→</span>
         </Link>
         <Link href="/photobooth" className="card tight row pressable">
           <span style={{ fontSize: 22 }}>📸</span>
-          <span className="grow" style={{ fontWeight: 800 }}>
+          <span className="grow" style={{ fontWeight: 600 }}>
             Photobooth
           </span>
           <span className="faint">→</span>
@@ -41,7 +41,7 @@ export default function MorePage() {
 
       <div className="card spread">
         <div>
-          <div style={{ fontWeight: 800 }}>You&apos;re {NAMES[me]}</div>
+          <div style={{ fontWeight: 600 }}>You&apos;re {NAMES[me]}</div>
           <div className="small muted">On this phone</div>
         </div>
         <button className="btn small ghost" onClick={() => confirm(`Switch to ${NAMES[other(me)]}?`) && switchPerson()}>
@@ -102,7 +102,7 @@ function Library() {
             <div className="row">
               <span style={{ fontSize: 24 }}>{s.emoji}</span>
               <div className="grow">
-                <div style={{ fontWeight: 800 }}>{s.label}</div>
+                <div style={{ fontWeight: 600 }}>{s.label}</div>
                 <div className="small faint">{s.hint}</div>
               </div>
             </div>

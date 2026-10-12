@@ -11,13 +11,14 @@ import {
   nowPlaying,
   openInSpotify,
   parseSpotifyUrl,
-  promptOfTheDay,
   recentlyPlayed,
   spotifyConnected,
   spotifyEnabled,
   type SpotifyTrack,
 } from '@/lib/spotify'
 import { Empty, Field, Sheet, useToast } from '@/components/ui'
+import Icon from '@/components/Icon'
+import { useMarkSeen } from '@/lib/seen'
 
 type Song = {
   id: string
@@ -41,8 +42,8 @@ export default function MusicPage() {
   const them = other(me)
   const songs = useRows<Song>('songs', { order: { column: 'created_at', ascending: false } })
   const [tab, setTab] = useState<Tab>('forYou')
-  const [sheet, setSheet] = useState<null | { kind: 'sent' | 'lately'; prompt?: string }>(null)
-  const prompt = promptOfTheDay()
+  const [sheet, setSheet] = useState<null | { kind: 'sent' | 'lately' }>(null)
+  useMarkSeen('music')
 
   const forYou = songs.rows.filter((s) => s.kind === 'sent' && s.to_person === me)
   const sent = songs.rows.filter((s) => s.kind === 'sent' && s.from_person === me)
@@ -63,26 +64,13 @@ export default function MusicPage() {
   return (
     <main className="page">
       <header className="page-head">
-        <div>
-          <h1>Music</h1>
-          <p className="sub">Songs for each other, whenever</p>
-        </div>
+        <h1>Music</h1>
+        <button className="btn small" onClick={() => setSheet({ kind: 'sent' })}>
+          <Icon name="send" size={16} /> Send {NAMES[them]} a song
+        </button>
       </header>
 
-      <div className="card glow" style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent), var(--card))' }}>
-        <p className="tiny" style={{ color: 'var(--accent)' }}>
-          Today&apos;s prompt
-        </p>
-        <h2 style={{ marginTop: 6 }}>Send {NAMES[them]} {prompt}</h2>
-        <div className="row" style={{ marginTop: 14 }}>
-          <button className="btn small" onClick={() => setSheet({ kind: 'sent', prompt })}>
-            Send one
-          </button>
-          <button className="btn small ghost" onClick={() => setSheet({ kind: 'sent' })}>
-            Just send a song
-          </button>
-        </div>
-      </div>
+      <Showcase songs={songs.rows} me={me} onFill={(id, patch) => songs.setRows((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)))} />
 
       <div className="seg">
         <button className={tab === 'forYou' ? 'on' : ''} onClick={() => setTab('forYou')}>
@@ -98,12 +86,13 @@ export default function MusicPage() {
 
       {tab === 'lately' && (
         <button className="card row pressable" onClick={() => setSheet({ kind: 'lately' })} style={{ textAlign: 'left' }}>
-          <span style={{ fontSize: 26 }}>🎧</span>
+          <span className="icon-chip">
+            <Icon name="plus" size={20} />
+          </span>
           <div className="grow">
-            <div style={{ fontWeight: 800 }}>Share what you&apos;re into lately</div>
+            <div style={{ fontWeight: 600 }}>Share what you&apos;re into lately</div>
             <div className="small muted">Only what you choose. Nothing is shared automatically.</div>
           </div>
-          <span style={{ color: 'var(--accent)' }}>+</span>
         </button>
       )}
 
@@ -113,7 +102,7 @@ export default function MusicPage() {
         <Empty
           emoji={tab === 'lately' ? '🎧' : '🎵'}
           title={tab === 'forYou' ? `Nothing from ${NAMES[them]} yet` : tab === 'sent' ? 'You haven’t sent anything yet' : 'No one has shared yet'}
-          sub={tab === 'forYou' ? 'Maybe send one first and guilt trip them' : undefined}
+          sub={tab === 'forYou' ? 'Send one first and guilt trip them' : undefined}
         />
       ) : (
         <div className="stack">
@@ -128,7 +117,6 @@ export default function MusicPage() {
       <SongSheet
         open={!!sheet}
         kind={sheet?.kind ?? 'sent'}
-        prompt={sheet?.prompt}
         onClose={() => setSheet(null)}
         onSaved={() => {
           songs.reload()
@@ -139,6 +127,89 @@ export default function MusicPage() {
     </main>
   )
 }
+
+/** The first thing on the Music page: big cover art and a playable Spotify preview. */
+function Showcase({ songs, me, onFill }: { songs: Song[]; me: Person; onFill: (id: string, patch: Partial<Song>) => void }) {
+  const ordered = [...songs].sort((a, b) => Number(isNewFor(b, me)) - Number(isNewFor(a, me)) || b.created_at.localeCompare(a.created_at)).slice(0, 12)
+  const [pickedId, setPickedId] = useState<string | null>(null)
+  const cur = ordered.find((s) => s.id === pickedId) ?? ordered[0]
+  const parsed = cur ? parseSpotifyUrl(cur.spotify_url) : null
+
+  // Songs added without cover art (bulk adds, failed lookups) get it filled in once.
+  useEffect(() => {
+    const missing = ordered.filter((s) => !s.image_url && parseSpotifyUrl(s.spotify_url))
+    for (const s of missing.slice(0, 6)) {
+      fetch(`/api/spotify-oembed?url=${encodeURIComponent(parseSpotifyUrl(s.spotify_url)!.url)}`)
+        .then((r) => r.json())
+        .then((j: { title?: string; image?: string }) => {
+          if (!j.image) return
+          const patch = { image_url: j.image, title: s.title ?? j.title ?? null }
+          onFill(s.id, patch)
+          update('songs', s.id, patch).catch(() => {})
+        })
+        .catch(() => {})
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ordered.map((s) => s.id + (s.image_url ? '1' : '0')).join()])
+
+  if (!cur) return null
+  return (
+    <section className="showcase">
+      {cur.image_url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="showcase-bg" src={cur.image_url} alt="" />
+      )}
+      <div className="showcase-body">
+        <div className="row" style={{ alignItems: 'flex-end', gap: 14 }}>
+          {cur.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={cur.image_url} alt="" className="cover-xl" />
+          ) : (
+            <div className="cover-xl cover-empty">
+              <Icon name="music" size={34} />
+            </div>
+          )}
+          <div className="grow" style={{ paddingBottom: 4 }}>
+            <p className="eyebrow">
+              {isNewFor(cur, me) ? 'New from ' + NAMES[cur.from_person] : cur.kind === 'lately' ? `${cur.from_person === me ? 'You are' : NAMES[cur.from_person] + ' is'} into` : cur.from_person === me ? `You sent ${NAMES[other(me)]}` : `From ${NAMES[cur.from_person]}`}
+            </p>
+            <h2 className="clamp" style={{ marginTop: 4 }}>{cur.title || 'A song'}</h2>
+            {cur.artist && <p className="small muted ellipsis">{cur.artist}</p>}
+            {cur.note && <p className="small" style={{ marginTop: 6, opacity: 0.85 }}>“{cur.note}”</p>}
+          </div>
+        </div>
+        {parsed && (
+          <iframe
+            key={parsed.id}
+            src={`https://open.spotify.com/embed/${parsed.type}/${parsed.id}?theme=0`}
+            width="100%"
+            height="80"
+            style={{ border: 0, borderRadius: 12, marginTop: 14, display: 'block' }}
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+          />
+        )}
+        {ordered.length > 1 && (
+          <div className="cover-strip">
+            {ordered.map((s) => (
+              <button key={s.id} onClick={() => setPickedId(s.id)} className={`cover-sm ${s.id === cur.id ? 'on' : ''}`} aria-label={s.title ?? 'Song'}>
+                {s.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={s.image_url} alt="" />
+                ) : (
+                  <Icon name="music" size={18} />
+                )}
+                {isNewFor(s, me) && <i className="dot" />}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+const isNewFor = (s: Song, me: Person) => s.kind === 'sent' && s.to_person === me && !s.seen_at
 
 function SongCard({ song, me, onDelete }: { song: Song; me: Person; onDelete: () => void }) {
   const [preview, setPreview] = useState(false)
@@ -162,15 +233,10 @@ function SongCard({ song, me, onDelete }: { song: Song; me: Person; onDelete: ()
               {fromMe ? 'You' : NAMES[song.from_person]} · {timeAgo(song.created_at)}
             </span>
           </div>
-          <div style={{ fontWeight: 800, fontSize: 17, marginTop: 2 }}>{song.title || 'A song'}</div>
+          <div style={{ fontWeight: 600, fontSize: 17, marginTop: 2 }}>{song.title || 'A song'}</div>
           {song.artist && <div className="small muted">{song.artist}</div>}
         </div>
       </div>
-      {song.prompt && (
-        <p className="small" style={{ marginTop: 10, color: 'var(--accent)' }}>
-          Prompt: {song.prompt}
-        </p>
-      )}
       {song.note && <p style={{ marginTop: 8 }}>{song.note}</p>}
       {preview && parsed && (
         <iframe
@@ -202,7 +268,7 @@ function SongCard({ song, me, onDelete }: { song: Song; me: Person; onDelete: ()
   )
 }
 
-function SongSheet({ open, kind, prompt, onClose, onSaved }: { open: boolean; kind: 'sent' | 'lately'; prompt?: string; onClose: () => void; onSaved: () => void }) {
+function SongSheet({ open, kind, onClose, onSaved }: { open: boolean; kind: 'sent' | 'lately'; onClose: () => void; onSaved: () => void }) {
   const { me } = useMe()
   const toast = useToast()
   const [link, setLink] = useState('')
@@ -263,7 +329,6 @@ function SongSheet({ open, kind, prompt, onClose, onSaved }: { open: boolean; ki
         artist: meta.artist ?? null,
         image_url: meta.image ?? null,
         note: note.trim() || null,
-        prompt: prompt ?? null,
       })
       toast('🎶', kind === 'sent' ? `Sent to ${NAMES[other(me)]}` : 'Shared')
       onSaved()
@@ -278,8 +343,6 @@ function SongSheet({ open, kind, prompt, onClose, onSaved }: { open: boolean; ki
   return (
     <Sheet open={open} onClose={onClose} title={kind === 'sent' ? `Send ${NAMES[other(me)]} a song` : 'Into this lately'}>
       <div className="stack">
-        {prompt && <p style={{ color: 'var(--accent)', marginTop: -6 }}>Prompt: {prompt}</p>}
-
         {connected && (
           <div className="row wrap">
             <button
@@ -339,7 +402,7 @@ function SongSheet({ open, kind, prompt, onClose, onSaved }: { open: boolean; ki
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {meta.image ? <img src={meta.image} alt="" className="thumb" /> : <div className="thumb" />}
             <div className="grow">
-              <div style={{ fontWeight: 800 }} className="ellipsis">
+              <div style={{ fontWeight: 600 }} className="ellipsis">
                 {meta.title ?? 'Spotify ' + parsed.type}
               </div>
               {meta.artist && <div className="small muted ellipsis">{meta.artist}</div>}
@@ -365,9 +428,8 @@ function SpotifyConnectCard() {
   useEffect(() => setConnected(spotifyConnected()), [])
   return (
     <div className="card tight row">
-      <span style={{ fontSize: 22 }}>🟢</span>
       <div className="grow">
-        <div style={{ fontWeight: 800 }}>{connected ? 'Spotify connected' : 'Connect Spotify (optional)'}</div>
+        <div style={{ fontWeight: 600 }}>{connected ? 'Spotify connected' : 'Connect Spotify (optional)'}</div>
         <div className="small muted">{connected ? 'Only used when you tap Now playing or Recently played.' : 'Lets you share what you’re playing in one tap.'}</div>
       </div>
       {connected ? (

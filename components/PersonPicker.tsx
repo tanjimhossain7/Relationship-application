@@ -1,53 +1,57 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { imageUrl, list } from '@/lib/db'
+import type { LibraryImage } from '@/lib/library'
 import { NAMES, PEOPLE, type Person } from '@/lib/people'
+import Icon from './Icon'
 
-const LOOK: Record<Person, { bg: string; ring: string; emoji: string }> = {
-  tanzim: { bg: 'linear-gradient(145deg, #10214d, #060b1c)', ring: '#9dbbff', emoji: '🫐' },
-  azrina: { bg: 'linear-gradient(145deg, #0f3627, #04110c)', ring: '#8fe8b8', emoji: '🍵' },
+const LOOK: Record<Person, { bg: string; ring: string; pic: string }> = {
+  tanzim: { bg: 'linear-gradient(150deg, #142a5e, #070d22 70%)', ring: '#a9c2ff', pic: '/badtzmaru.png' },
+  azrina: { bg: 'linear-gradient(150deg, #134430, #050f0b 70%)', ring: '#9fe6bf', pic: '/azrina.jpg' },
 }
 
 export default function PersonPicker({ onChoose }: { onChoose: (p: Person) => void }) {
+  // Tanzim's card uses the motorcycle Badtzmaru from the picture library once it's uploaded.
+  const [moto, setMoto] = useState<string | null>(null)
+  useEffect(() => {
+    list<LibraryImage>('library_images', { eq: { slot: 'moto' } })
+      .then(([m]) => m && setMoto(imageUrl(m.image_path) ?? null))
+      .catch(() => {})
+  }, [])
+
   return (
-    <div className="fullscreen" style={{ gap: 28 }}>
+    <div className="fullscreen" style={{ gap: 30 }}>
       <div className="stack-sm pop">
-        <div style={{ fontSize: 44 }} className="float">
-          💌
-        </div>
-        <h1 style={{ fontSize: 34 }}>Who&apos;s this?</h1>
-        <p className="muted">Pick yourself. No passwords, just vibes.</p>
+        <p className="eyebrow">Underpantmaru</p>
+        <h1 style={{ fontSize: 38 }}>
+          Who&apos;s <em>this?</em>
+        </h1>
       </div>
       <div className="stack" style={{ width: '100%', maxWidth: 380 }}>
-        {PEOPLE.map((p, i) => (
-          <button
-            key={p}
-            onClick={() => onChoose(p)}
-            className="pressable pop"
-            style={{
-              animationDelay: `${0.12 + i * 0.1}s`,
-              background: LOOK[p].bg,
-              border: `1px solid ${LOOK[p].ring}40`,
-              borderRadius: 26,
-              padding: '22px 22px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 16,
-              textAlign: 'left',
-              boxShadow: `0 14px 40px -16px ${LOOK[p].ring}80`,
-            }}
-          >
-            <span style={{ fontSize: 34 }}>{LOOK[p].emoji}</span>
-            <span className="grow">
-              <span className="display" style={{ fontSize: 24, display: 'block' }}>
-                {NAMES[p]}
+        {PEOPLE.map((p, i) => {
+          const pic = p === 'tanzim' && moto ? moto : LOOK[p].pic
+          return (
+            <button
+              key={p}
+              onClick={() => onChoose(p)}
+              className="pressable pop picker-card"
+              style={{ animationDelay: `${0.1 + i * 0.08}s`, background: LOOK[p].bg, borderColor: `${LOOK[p].ring}33` }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={pic} alt="" className={pic.endsWith('.jpg') ? 'avatar photo' : 'avatar'} />
+              <span className="grow">
+                <span className="display" style={{ fontSize: 26, display: 'block' }}>
+                  {NAMES[p]}
+                </span>
+                <span className="small" style={{ color: LOOK[p].ring }}>
+                  That&apos;s me
+                </span>
               </span>
-              <span className="small" style={{ color: LOOK[p].ring }}>
-                That&apos;s me
-              </span>
-            </span>
-            <span style={{ color: LOOK[p].ring, fontSize: 22 }}>→</span>
-          </button>
-        ))}
+              <Icon name="arrow" size={20} style={{ color: LOOK[p].ring }} />
+            </button>
+          )
+        })}
       </div>
       <p className="faint small">Together since April 22, 2024</p>
     </div>

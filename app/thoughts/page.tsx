@@ -9,7 +9,7 @@ import { Empty, useToast } from '@/components/ui'
 
 type Thought = { id: string; person: Person; body: string; reaction: string | null; seen_at: string | null; created_at: string }
 
-const STARTERS = ['hmm it’s so interesting that', 'random thought:', 'not to be dramatic but', 'shower thought:', 'hot take:', 'i was just thinking about']
+const STARTERS = ['hmm it’s so interesting that', 'random thought:', 'not to be dramatic but', 'shower thought:', 'here is a diabolical hypothetical:', 'i was just thinking about']
 const REACTIONS = ['❤️', '😂', '🤯', '🥹', '🤔', '💀']
 
 export default function ThoughtsPage() {
@@ -58,10 +58,7 @@ export default function ThoughtsPage() {
   return (
     <main className="page">
       <header className="page-head">
-        <div>
-          <h1>Thoughtboard</h1>
-          <p className="sub">Brain dumps for the other one to find</p>
-        </div>
+        <h1>Thoughtboard</h1>
       </header>
 
       <div className="card">
@@ -75,7 +72,13 @@ export default function ThoughtsPage() {
           maxLength={1000}
         />
         <div className="spread" style={{ marginTop: 8 }}>
-          <span className="faint small">{body.length ? `${body.length}/1000` : ''}</span>
+          {body.trim() ? (
+            <span className="faint small">{body.length}/1000</span>
+          ) : (
+            <button className="chip" onClick={() => setBody('Here is a diabolical hypothetical: ')}>
+              Here is a diabolical hypothetical
+            </button>
+          )}
           <button className="btn small" onClick={post} disabled={busy || !body.trim()}>
             Put it out there
           </button>
@@ -109,7 +112,7 @@ export default function ThoughtsPage() {
                 }}
               >
                 <div className="spread small">
-                  <span className={t.person === 'tanzim' ? 'c-t' : 'c-a'} style={{ fontWeight: 800 }}>
+                  <span className={t.person === 'tanzim' ? 'c-t' : 'c-a'} style={{ fontWeight: 600 }}>
                     {mine ? 'You' : NAMES[t.person]}
                   </span>
                   <span className="faint">{timeAgo(t.created_at)}</span>

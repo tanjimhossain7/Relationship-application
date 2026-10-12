@@ -153,25 +153,3 @@ export function openInSpotify(url: string) {
     if (document.visibilityState === 'visible' && Date.now() - started < 2500) window.open(p.url, '_blank')
   }, 1500)
 }
-
-export const SONG_PROMPTS = [
-  'a song that sounds like our first date',
-  'the song stuck in your head right now',
-  'a song you want to hear in the car together',
-  'a song that reminds you of me',
-  'a song for a rainy day in',
-  'the most unhinged song in your library',
-  'a song you would slow dance to in the kitchen',
-  'a song from when we first started talking',
-  'a song that would play in the movie about us',
-  'a song that is pure main character energy',
-  'a song you think I have never heard',
-  'a song that fixes a bad day',
-  'a song for a late night drive',
-  'a guilty pleasure you would never admit to anyone else',
-]
-
-export function promptOfTheDay(date = new Date()) {
-  const n = Math.floor(date.getTime() / 86400000)
-  return SONG_PROMPTS[n % SONG_PROMPTS.length]
-}

@@ -6,10 +6,12 @@ import { uploadImage } from '@/lib/db'
 import { pretty, today } from '@/lib/dates'
 import { useMe, useRows } from '@/lib/hooks'
 import { Empty, Field, Lightbox, PhotoPicker, Sheet, useToast } from '@/components/ui'
+import { useMarkSeen } from '@/lib/seen'
 
 type Strip = { id: string; image_path: string; caption: string | null; taken_on: string | null; created_at: string }
 
 export default function PhotoboothPage() {
+  useMarkSeen('photobooth')
   const strips = useRows<Strip>('photobooth', { order: { column: 'created_at', ascending: false } })
   const [adding, setAdding] = useState(false)
   const [open, setOpen] = useState<number | null>(null)

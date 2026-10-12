@@ -6,6 +6,7 @@ import { pretty, relative, today } from '@/lib/dates'
 import { useMe } from '@/lib/hooks'
 import { NAMES, other, type Person } from '@/lib/people'
 import { Field, Sheet, useToast } from './ui'
+import Icon from './Icon'
 
 export type DateIdea = {
   id: string
@@ -187,7 +188,7 @@ export function ProposeDateSheet({ open, onClose, onSaved }: { open: boolean; on
           <textarea className="input" rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="dress cute, I'm driving" />
         </Field>
         <button className="btn block" disabled={busy || !what.trim() || !date} onClick={save}>
-          {busy ? 'Sending…' : 'Send it 💘'}
+          {busy ? 'Sending…' : 'Send it'}
         </button>
       </div>
     </Sheet>
@@ -237,12 +238,14 @@ export function DateIdeasCard() {
   return (
     <>
       <button className="card row pressable" onClick={() => setProposing(true)} style={{ textAlign: 'left' }}>
-        <span style={{ fontSize: 26 }}>💘</span>
+        <span className="icon-chip">
+          <Icon name="calendar" size={20} />
+        </span>
         <div className="grow">
-          <div style={{ fontWeight: 800 }}>Propose a date</div>
+          <div style={{ fontWeight: 600 }}>Propose a date</div>
           <div className="small muted">What, where, when. {NAMES[other(me)]} answers when they open the app.</div>
         </div>
-        <span style={{ color: 'var(--accent)', fontSize: 22 }}>+</span>
+        <Icon name="plus" size={18} style={{ color: 'var(--accent)' }} />
       </button>
 
       {owed.map((d) => (
@@ -269,7 +272,7 @@ export function DateIdeasCard() {
           {mine.map((d) => (
             <div key={d.id} className="card tight row">
               <div className="grow">
-                <div style={{ fontWeight: 800 }} className="ellipsis">
+                <div style={{ fontWeight: 600 }} className="ellipsis">
                   {d.what}
                 </div>
                 <div className="small muted ellipsis">

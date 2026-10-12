@@ -7,8 +7,10 @@ import { GAMES, board, detectGame, gameById, type Game, type GameId, type Score 
 import { useMe, useRows } from '@/lib/hooks'
 import { NAMES, other, type Person } from '@/lib/people'
 import { Empty, Field, Sheet, useToast } from '@/components/ui'
+import { useMarkSeen } from '@/lib/seen'
 
 export default function GamesPage() {
+  useMarkSeen('games')
   const { me } = useMe()
   const scores = useRows<Score>('game_scores', { order: { column: 'played_on', ascending: false } })
   const [sel, setSel] = useState<GameId | 'all'>('all')
@@ -65,7 +67,7 @@ export default function GamesPage() {
             {GAMES.map((g) => (
               <button key={g.id} className="tile pressable" style={{ minHeight: 86, padding: 12, alignItems: 'center', textAlign: 'center', opacity: todayMine.has(g.id) ? 0.55 : 1 }} onClick={() => setLogging(g.id)}>
                 <span style={{ fontSize: 24 }}>{g.emoji}</span>
-                <span className="small" style={{ fontWeight: 800 }}>
+                <span className="small" style={{ fontWeight: 600 }}>
                   {g.name}
                 </span>
                 <span className="faint" style={{ fontSize: 11 }}>
@@ -170,7 +172,7 @@ function Side({ p, wins, lead, me, right }: { p: Person; wins: number; lead: boo
       <div className="score-big" style={{ color: `var(--${p})` }}>
         {wins}
       </div>
-      <div className="small" style={{ fontWeight: 800, marginTop: 4 }}>
+      <div className="small" style={{ fontWeight: 600, marginTop: 4 }}>
         {lead && '👑 '}
         {p === me ? 'You' : NAMES[p]}
       </div>
@@ -201,7 +203,7 @@ function ScoreCell({ s, win, canDelete, onDelete }: { s?: Score; win: boolean; c
   return (
     <button
       onClick={() => canDelete && confirm('Delete this score?') && remove('game_scores', s.id).then(onDelete)}
-      style={{ fontWeight: 800, color: win ? 'var(--accent)' : undefined }}
+      style={{ fontWeight: 600, color: win ? 'var(--accent)' : undefined }}
     >
       {fmt(s)}
       {win ? ' 👑' : ''}
@@ -322,7 +324,7 @@ function LogSheet({
                     const v = e.target.value
                     setScore(v === '' ? '' : Number(v) || 0)
                   }}
-                  style={{ fontSize: 22, fontWeight: 800 }}
+                  style={{ fontSize: 22, fontWeight: 600 }}
                 />
                 <button className="icon-btn" onClick={() => (setFailed(false), setScore((s) => Number(s || 0) + 1))}>
                   +
