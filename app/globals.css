@@ -681,6 +681,16 @@ input[type='date'].input {
   columns: 2;
   column-gap: 10px;
 }
+.masonry.strips {
+  columns: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+.masonry.strips > * {
+  margin-bottom: 0;
+}
 .masonry > * {
   break-inside: avoid;
   margin-bottom: 10px;
