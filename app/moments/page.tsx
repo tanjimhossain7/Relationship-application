@@ -8,10 +8,12 @@ import { useMe, useRows } from '@/lib/hooks'
 import { NAMES, type Person } from '@/lib/people'
 import { Empty, Field, PhotoPicker, Sheet, useToast } from '@/components/ui'
 import { ProposeDateSheet } from '@/components/DateIdeas'
+import { useMarkSeen } from '@/lib/seen'
 
 type Tab = 'upcoming' | 'memories' | 'timeline'
 
 export default function MomentsPage() {
+  useMarkSeen('moments')
   const events = useRows<EventRow>('events', { order: { column: 'date', ascending: true } })
   const [tab, setTab] = useState<Tab>('upcoming')
   const [editing, setEditing] = useState<EventRow | 'new' | null>(null)
@@ -144,7 +146,7 @@ function EventCard({ e, onOpen }: { e: Upcoming; onOpen: () => void }) {
         </div>
       </div>
       <div className="grow">
-        <div style={{ fontWeight: 800 }} className="ellipsis">
+        <div style={{ fontWeight: 600 }} className="ellipsis">
           {typeEmoji(e.type)} {e.title}
         </div>
         <div className="small muted">
@@ -241,7 +243,7 @@ function Timeline({ events, onOpen }: { events: EventRow[]; onOpen: (e: EventRow
               <button key={e.id} className="card tight row pressable" onClick={() => onOpen(e)} style={{ textAlign: 'left' }}>
                 <span style={{ fontSize: 22 }}>{typeEmoji(e.type)}</span>
                 <div className="grow">
-                  <div style={{ fontWeight: 800 }} className="ellipsis">
+                  <div style={{ fontWeight: 600 }} className="ellipsis">
                     {e.title}
                   </div>
                   <div className="small muted">{pretty(e.date, { month: 'long', day: 'numeric' })}</div>

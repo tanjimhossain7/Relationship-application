@@ -9,9 +9,16 @@ import { useMe, useRows } from '@/lib/hooks'
 import { NAMES, STARTED_DATING, other } from '@/lib/people'
 import { Field, PhotoPicker, Sheet, useToast } from '@/components/ui'
 import { DateIdeasCard } from '@/components/DateIdeas'
+import Icon, { type IconName } from '@/components/Icon'
+import { board, type Score } from '@/lib/games'
+import { byFavorite, groupPlaces, type Visit } from '@/lib/eats'
+import { countNew } from '@/lib/seen'
+import type { ReactNode } from 'react'
 
 type Pick = { id: string; chooser: string; for_person: string; image_path: string; caption: string | null; seen_at: string | null; week_start: string }
-type Song = { id: string; from_person: string; to_person: string | null; title: string | null; kind: string; seen_at: string | null }
+type Song = { id: string; from_person: string; to_person: string | null; title: string | null; artist: string | null; image_url: string | null; kind: string; seen_at: string | null; created_at: string }
+type Strip = { id: string; image_path: string; created_by: string | null; created_at: string }
+type Thought = { id: string; person: string; body: string; seen_at: string | null; created_at: string }
 
 export default function Home() {
   const { me } = useMe()
@@ -19,7 +26,11 @@ export default function Home() {
   const week = weekStart()
   const picks = useRows<Pick>('weekly_picks', { eq: { week_start: week } })
   const events = useRows<EventRow>('events')
-  const songs = useRows<Song>('songs', { eq: { to_person: me, seen_at: null } })
+  const songs = useRows<Song>('songs', { order: { column: 'created_at', ascending: false } })
+  const strips = useRows<Strip>('photobooth', { order: { column: 'created_at', ascending: false } })
+  const thoughts = useRows<Thought>('thoughts', { order: { column: 'created_at', ascending: false } })
+  const scores = useRows<Score & { id: string; created_at: string }>('game_scores')
+  const visits = useRows<Visit>('restaurant_visits')
   const [streak, setStreak] = useState<number | null>(null)
   const [picking, setPicking] = useState(false)
 
@@ -34,19 +45,25 @@ export default function Home() {
   const days = daysBetween(STARTED_DATING, today())
   const next = upcoming(events.rows).slice(0, 3)
   const memory = onThisDay(events.rows)[0]
-  const newSongs = songs.rows.filter((s) => s.from_person === them)
+  const newSongs = songs.rows.filter((s) => s.kind === 'sent' && s.to_person === me && !s.seen_at)
 
   return (
     <main className="page">
       <header className="page-head">
         <div>
-          <p className="muted small">{greeting()}</p>
-          <h1>Hi {NAMES[me]}</h1>
+          <p className="eyebrow">{greeting()}</p>
+          <h1>
+            Hi <em>{NAMES[me]}</em>
+          </h1>
         </div>
         <div className="row">
-          {streak ? <span className="pill accent">🔥 {streak}</span> : null}
+          {streak ? (
+            <span className="pill accent">
+              <Icon name="flame" size={14} /> {streak}
+            </span>
+          ) : null}
           <Link href="/more" className="icon-btn" aria-label="More">
-            ⚙️
+            <Icon name="gear" size={19} />
           </Link>
         </div>
       </header>
@@ -68,10 +85,8 @@ export default function Home() {
         </div>
       ) : (
         <div className="card center" style={{ padding: '30px 18px' }}>
-          <div style={{ fontSize: 34 }} className="float">
-            🖼️
-          </div>
-          <p className="muted" style={{ marginTop: 6 }}>
+          <Icon name="photo" size={30} style={{ margin: '0 auto', opacity: 0.5 }} />
+          <p className="muted" style={{ marginTop: 10 }}>
             {NAMES[them]} hasn&apos;t picked your picture this week yet
           </p>
         </div>
@@ -82,19 +97,21 @@ export default function Home() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={imageUrl(mine.image_path)} alt="" className="thumb" />
           <div className="grow">
-            <div style={{ fontWeight: 800 }}>Your pick for {NAMES[them]}</div>
+            <div style={{ fontWeight: 600 }}>Your pick for {NAMES[them]}</div>
             <div className="small muted">{mine.seen_at ? 'Opened ✓' : 'Not opened yet'}</div>
           </div>
           <span className="faint small">Change</span>
         </button>
       ) : (
         <button className="card row pressable new" onClick={() => setPicking(true)} style={{ textAlign: 'left' }}>
-          <span style={{ fontSize: 28 }}>💌</span>
+          <span className="icon-chip">
+            <Icon name="heart" size={20} />
+          </span>
           <div className="grow">
-            <div style={{ fontWeight: 800 }}>Pick this week&apos;s picture for {NAMES[them]}</div>
+            <div style={{ fontWeight: 600 }}>Pick this week&apos;s picture for {NAMES[them]}</div>
             <div className="small muted">It&apos;s the first thing they see when they open the app</div>
           </div>
-          <span style={{ color: 'var(--accent)' }}>→</span>
+          <Icon name="arrow" size={18} style={{ color: 'var(--accent)' }} />
         </button>
       )}
 
@@ -102,14 +119,21 @@ export default function Home() {
 
       {newSongs.length > 0 && (
         <Link href="/music" className="card row pressable new">
-          <span style={{ fontSize: 28 }}>🎵</span>
+          {newSongs[0].image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={newSongs[0].image_url} alt="" className="thumb" style={{ width: 44, height: 44 }} />
+          ) : (
+            <span className="icon-chip">
+              <Icon name="music" size={20} />
+            </span>
+          )}
           <div className="grow">
-            <div style={{ fontWeight: 800 }}>
+            <div style={{ fontWeight: 600 }}>
               {NAMES[them]} sent you {newSongs.length === 1 ? 'a song' : `${newSongs.length} songs`}
             </div>
             <div className="small muted ellipsis">{newSongs[0].title ?? 'Tap to listen'}</div>
           </div>
-          <span style={{ color: 'var(--accent)' }}>→</span>
+          <Icon name="arrow" size={18} style={{ color: 'var(--accent)' }} />
         </Link>
       )}
 
@@ -117,7 +141,7 @@ export default function Home() {
         <div>
           <div className="counter">{days.toLocaleString()}</div>
           <div className="muted small" style={{ marginTop: 4 }}>
-            days of us
+            days together
           </div>
         </div>
         <div className="faint small" style={{ textAlign: 'right' }}>
@@ -128,8 +152,8 @@ export default function Home() {
       </div>
 
       {memory && (
-        <Link href="/moments?tab=memories" className="card pressable" style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--pink) 16%, transparent), var(--card))' }}>
-          <p className="tiny" style={{ color: 'var(--pink)' }}>
+        <Link href="/moments?tab=memories" className="card pressable">
+          <p className="eyebrow">
             {memory.yearsAgo === 1 ? 'This time last year' : `${memory.yearsAgo} years ago`}
           </p>
           <div className="row" style={{ marginTop: 8 }}>
@@ -150,7 +174,7 @@ export default function Home() {
               <Link key={e.id + e.on} href="/moments" className="card tight row pressable">
                 <span style={{ fontSize: 24 }}>{typeEmoji(e.type)}</span>
                 <div className="grow">
-                  <div style={{ fontWeight: 800 }} className="ellipsis">
+                  <div style={{ fontWeight: 600 }} className="ellipsis">
                     {e.title}
                     {e.id === 'anniversary' && e.years ? ` · ${e.years} years` : ''}
                   </div>
@@ -165,12 +189,45 @@ export default function Home() {
 
       <p className="section-label">Our stuff</p>
       <div className="tiles">
-        <Tile href="/music" em="🎧" t="Music" s="Songs for each other" />
-        <Tile href="/photobooth" em="📸" t="Photobooth" s="Every strip ever" />
-        <Tile href="/thoughts" em="💭" t="Thoughtboard" s="Random brain stuff" />
-        <Tile href="/moments" em="🗓️" t="Moments" s="Big days & memories" />
-        <Tile href="/games" em="🏆" t="Games" s="Who's winning" />
-        <Tile href="/eats" em="🍜" t="Eats" s="Ratings & roasts" />
+        <Tile href="/music" ico="music" t="Music" fresh={countNew('music', songs.rows, (x) => x.from_person === them)}>
+          {songs.rows.length ? (
+            <div className="row" style={{ gap: 8 }}>
+              <div className="covers">
+                {songs.rows
+                  .filter((x) => x.image_url)
+                  .slice(0, 3)
+                  .map((x) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={x.id} src={x.image_url!} alt="" />
+                  ))}
+              </div>
+              <span className="ellipsis grow">{songs.rows[0].title ?? 'A song'}</span>
+            </div>
+          ) : (
+            'Songs for each other'
+          )}
+        </Tile>
+        <Tile href="/photobooth" ico="camera" t="Photobooth" fresh={countNew('photobooth', strips.rows, (x) => x.created_by === them)} bg={strips.rows[0] && imageUrl(strips.rows[0].image_path)}>
+          {strips.rows.length ? `${strips.rows.length} strip${strips.rows.length === 1 ? '' : 's'}` : 'Every strip ever'}
+        </Tile>
+        <Tile href="/thoughts" ico="thought" t="Thoughtboard" fresh={thoughts.rows.filter((x) => x.person === them && !x.seen_at).length}>
+          {thoughts.rows[0] ? <span className="clamp quote">{thoughts.rows[0].body}</span> : 'Random brain stuff'}
+        </Tile>
+        <Tile href="/moments" ico="calendar" t="Moments" fresh={countNew('moments', events.rows as (EventRow & { created_at?: string })[], (x) => x.created_by === them)}>
+          {next[0] ? (
+            <span className="ellipsis" style={{ display: 'block' }}>
+              {next[0].title} · <span style={{ color: 'var(--accent)' }}>{relative(next[0].on)}</span>
+            </span>
+          ) : (
+            'Big days & memories'
+          )}
+        </Tile>
+        <Tile href="/games" ico="trophy" t="Games" fresh={countNew('games', scores.rows, (x) => x.person === them)}>
+          <GamesPreview scores={scores.rows} />
+        </Tile>
+        <Tile href="/eats" ico="burger" t="Eats" fresh={countNew('eats', visits.rows, (x) => x.created_by === them)}>
+          <EatsPreview visits={visits.rows} />
+        </Tile>
       </div>
 
       <WeeklyPickSheet open={picking} onClose={() => setPicking(false)} existing={mine} onSaved={picks.reload} />
@@ -178,15 +235,53 @@ export default function Home() {
   )
 }
 
-function Tile({ href, em, t, s }: { href: string; em: string; t: string; s: string }) {
+function Tile({ href, ico, t, fresh, bg, children }: { href: string; ico: IconName; t: string; fresh: number; bg?: string; children: ReactNode }) {
   return (
-    <Link href={href} className="tile pressable">
-      <span className="em">{em}</span>
-      <span>
+    <Link href={href} className={`tile pressable ${bg ? 'has-bg' : ''}`}>
+      {bg && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={bg} alt="" className="tile-bg" />
+      )}
+      {fresh > 0 && <span className="new-badge">{fresh} new</span>}
+      <span className="tile-ico">
+        <Icon name={ico} size={20} />
+      </span>
+      <span style={{ minWidth: 0 }}>
         <div className="t">{t}</div>
-        <div className="s">{s}</div>
+        <div className="s">{children}</div>
       </span>
     </Link>
+  )
+}
+
+function GamesPreview({ scores }: { scores: Score[] }) {
+  const b = board(scores)
+  const total = b.wins.tanzim + b.wins.azrina
+  if (!scores.length) return <>Who&apos;s winning</>
+  return (
+    <span style={{ display: 'block' }}>
+      <span className="spread" style={{ fontVariantNumeric: 'tabular-nums' }}>
+        <span className="c-t">{NAMES.tanzim[0]} {b.wins.tanzim}</span>
+        <span className="c-a">{b.wins.azrina} {NAMES.azrina[0]}</span>
+      </span>
+      <span className="bar thin" style={{ marginTop: 6 }}>
+        <i style={{ width: total ? `${(b.wins.tanzim / total) * 100}%` : '50%', background: 'var(--tanzim)' }} />
+        <i style={{ width: total ? `${(b.wins.azrina / total) * 100}%` : '50%', background: 'var(--azrina)' }} />
+      </span>
+    </span>
+  )
+}
+
+function EatsPreview({ visits }: { visits: Visit[] }) {
+  const top = groupPlaces(visits).sort(byFavorite)[0]
+  if (!top) return <>Ratings & roasts</>
+  return (
+    <span style={{ display: 'block' }}>
+      <span className="ellipsis" style={{ display: 'block', color: 'var(--text)' }}>
+        {top.name}
+      </span>
+      {top.avg !== null ? <span style={{ color: 'var(--accent)' }}>Favorite · {top.avg}</span> : 'Favorite'}
+    </span>
   )
 }
 

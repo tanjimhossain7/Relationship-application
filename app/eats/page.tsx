@@ -6,37 +6,9 @@ import { pretty, relative, today } from '@/lib/dates'
 import { useMe, useRows } from '@/lib/hooks'
 import { NAMES, other, type Person } from '@/lib/people'
 import { roastFor } from '@/lib/roasts'
+import { avg, byFavorite, groupPlaces, type Place, type Visit } from '@/lib/eats'
+import { useMarkSeen } from '@/lib/seen'
 import { Empty, Field, Sheet, Stars, useToast } from '@/components/ui'
-
-type Visit = {
-  id: string
-  name: string
-  visited_on: string
-  cuisine: string | null
-  area: string | null
-  tanzim_rating: number | null
-  azrina_rating: number | null
-  tanzim_review: string | null
-  azrina_review: string | null
-  created_by: Person | null
-  created_at: string
-}
-
-type Place = {
-  key: string
-  name: string
-  visits: Visit[]
-  t: number | null
-  a: number | null
-  avg: number | null
-  last: string
-  cuisine: string | null
-}
-
-const avg = (xs: (number | null)[]) => {
-  const v = xs.filter((x): x is number => x !== null && x !== undefined).map(Number)
-  return v.length ? Math.round((v.reduce((a, b) => a + b, 0) / v.length) * 10) / 10 : null
-}
 
 type Sort = 'avg' | 'recent' | 'visits' | 'name'
 
@@ -49,34 +21,16 @@ export default function EatsPage() {
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState<Visit | null>(null)
   const [place, setPlace] = useState<string | null>(null)
+  useMarkSeen('eats')
 
   const places = useMemo(() => {
-    const m = new Map<string, Visit[]>()
-    for (const v of visits.rows) {
-      const k = v.name.trim().toLowerCase()
-      m.set(k, [...(m.get(k) ?? []), v])
-    }
-    const out: Place[] = [...m.entries()].map(([key, vs]) => {
-      const t = avg(vs.map((v) => v.tanzim_rating))
-      const a = avg(vs.map((v) => v.azrina_rating))
-      return {
-        key,
-        name: vs[0].name,
-        visits: vs,
-        t,
-        a,
-        avg: avg([...vs.map((v) => v.tanzim_rating), ...vs.map((v) => v.azrina_rating)]),
-        last: vs.map((v) => v.visited_on).sort().reverse()[0],
-        cuisine: vs.find((v) => v.cuisine)?.cuisine ?? null,
-      }
-    })
     const cmp: Record<Sort, (a: Place, b: Place) => number> = {
-      avg: (a, b) => (b.avg ?? -1) - (a.avg ?? -1),
+      avg: byFavorite,
       recent: (a, b) => b.last.localeCompare(a.last),
-      visits: (a, b) => b.visits.length - a.visits.length,
+      visits: (a, b) => b.visits.length - a.visits.length || byFavorite(a, b),
       name: (a, b) => a.name.localeCompare(b.name),
     }
-    return out.sort(cmp[sort])
+    return groupPlaces(visits.rows).sort(cmp[sort])
   }, [visits.rows, sort])
 
   const ql = q.trim().toLowerCase()
@@ -111,13 +65,13 @@ export default function EatsPage() {
       {visits.loading ? (
         <div className="skeleton" style={{ height: 200 }} />
       ) : visits.rows.length === 0 ? (
-        <Empty emoji="🍜" title="No food logged yet" sub="Add every place you’ve eaten. The app will judge you." />
+        <Empty emoji="🍔" title="No food logged yet" sub="Add every place you’ve eaten. The app will judge you." />
       ) : tab === 'places' ? (
         <>
           <div className="chips">
             {(
               [
-                ['avg', 'Top rated'],
+                ['avg', 'Favorites'],
                 ['recent', 'Recent'],
                 ['visits', 'Most visited'],
                 ['name', 'A–Z'],
@@ -132,6 +86,7 @@ export default function EatsPage() {
             <table className="table">
               <thead>
                 <tr>
+                  {sort === 'avg' && <th className="rank" />}
                   <th>Place</th>
                   <th className="num c-t">T</th>
                   <th className="num c-a">A</th>
@@ -141,8 +96,9 @@ export default function EatsPage() {
               <tbody>
                 {shownPlaces.map((p) => (
                   <tr key={p.key} onClick={() => setPlace(p.key)} style={{ cursor: 'pointer' }}>
+                    {sort === 'avg' && <td className="rank">{p.avg !== null ? places.indexOf(p) + 1 : ''}</td>}
                     <td>
-                      <div style={{ fontWeight: 800 }}>{p.name}</div>
+                      <div style={{ fontWeight: 600 }}>{p.name}</div>
                       <div className="faint small">
                         {p.visits.length > 1 ? `${p.visits.length} visits · ` : ''}
                         {p.cuisine ? `${p.cuisine} · ` : ''}
@@ -251,10 +207,10 @@ function VisitCard({ v, me, onEdit }: { v: Visit; me: Person; onEdit: () => void
           const rev = p === 'tanzim' ? v.tanzim_review : v.azrina_review
           return (
             <div key={p} className="row small" style={{ alignItems: 'flex-start' }}>
-              <span className={p === 'tanzim' ? 'c-t' : 'c-a'} style={{ fontWeight: 800, width: 62, flex: 'none' }}>
+              <span className={p === 'tanzim' ? 'c-t' : 'c-a'} style={{ fontWeight: 600, width: 62, flex: 'none' }}>
                 {NAMES[p]}
               </span>
-              <span style={{ fontWeight: 800, width: 28, flex: 'none' }}>
+              <span style={{ fontWeight: 600, width: 28, flex: 'none' }}>
                 <Stars value={r} />
               </span>
               <span className="muted grow">{rev || (r === null ? 'no review yet' : '')}</span>

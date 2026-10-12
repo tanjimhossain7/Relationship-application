@@ -27,7 +27,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
 export function Empty({ emoji, title, sub }: { emoji: string; title: string; sub?: string }) {
   return (
     <div className="empty">
-      <div className="big float">{emoji}</div>
+      <div className="big">{emoji}</div>
       <div className="display" style={{ fontSize: 18, color: 'var(--text)' }}>
         {title}
       </div>
