@@ -36,11 +36,11 @@ export default function PhotoboothPage() {
       ) : sorted.length === 0 ? (
         <Empty emoji="📸" title="No strips yet" sub="Add all the digital photobooth pictures here" />
       ) : (
-        <div className="masonry">
+        <div className="masonry strips">
           {sorted.map((s, i) => (
             <button key={s.id} className="pressable" onClick={() => setOpen(i)} style={{ display: 'block', width: '100%', textAlign: 'left' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={imageUrl(s.image_path)} alt="" className="photo" loading="lazy" style={{ borderRadius: 18 }} />
+              <img src={imageUrl(s.image_path)} alt="" className="photo" loading="lazy" style={{ borderRadius: 6 }} />
               {(s.caption || s.taken_on) && (
                 <div className="small" style={{ padding: '6px 4px 0' }}>
                   {s.caption && <div style={{ fontWeight: 700 }}>{s.caption}</div>}

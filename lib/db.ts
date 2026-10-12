@@ -171,13 +171,13 @@ export async function uploadImage(file: File, folder: string): Promise<string> {
 
 export function imageUrl(path: string | null | undefined): string | undefined {
   if (!path) return undefined
-  if (/^(https?:|data:)/.test(path)) return path
+  if (/^(https?:|data:|\/)/.test(path)) return path
   if (isDemo) return typeof window === 'undefined' ? undefined : localStorage.getItem(`us:img:${path}`) || undefined
   return sb().storage.from(BUCKET).getPublicUrl(path).data.publicUrl
 }
 
 export async function removeImage(path: string | null | undefined) {
-  if (!path || /^(https?:|data:)/.test(path)) return
+  if (!path || /^(https?:|data:|\/)/.test(path)) return
   if (isDemo) {
     localStorage.removeItem(`us:img:${path}`)
     return
