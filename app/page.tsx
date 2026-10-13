@@ -14,6 +14,7 @@ import DietCoke from '@/components/DietCoke'
 import { board, type Score } from '@/lib/games'
 import { byFavorite, groupPlaces, type Visit } from '@/lib/eats'
 import { countNew } from '@/lib/seen'
+import type { Movie } from '@/lib/movies'
 import type { ReactNode } from 'react'
 
 type Pick = { id: string; chooser: string; for_person: string; image_path: string; caption: string | null; seen_at: string | null; week_start: string }
@@ -32,6 +33,7 @@ export default function Home() {
   const thoughts = useRows<Thought>('thoughts', { order: { column: 'created_at', ascending: false } })
   const scores = useRows<Score & { id: string; created_at: string }>('game_scores')
   const visits = useRows<Visit>('restaurant_visits')
+  const movies = useRows<Movie>('movies', { order: { column: 'created_at', ascending: false } })
   const [streak, setStreak] = useState<number | null>(null)
   const [picking, setPicking] = useState(false)
 
@@ -229,6 +231,23 @@ export default function Home() {
         <Tile href="/eats" ico="burger" t="Eats" fresh={countNew('eats', visits.rows, (x) => x.created_by === them)}>
           <EatsPreview visits={visits.rows} />
         </Tile>
+        <Tile href="/movies" ico="film" t="Movies" wide fresh={countNew('movies', movies.rows, (x) => x.created_by === them)}>
+          {movies.rows.some((m) => m.poster_url) ? (
+            <span className="poster-row" style={{ marginTop: 4 }}>
+              {movies.rows
+                .filter((m) => m.poster_url)
+                .slice(0, 7)
+                .map((m) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={m.id} src={m.poster_url!} alt="" />
+                ))}
+            </span>
+          ) : movies.rows.length ? (
+            `${movies.rows.length} seen together`
+          ) : (
+            'Everything we saw together'
+          )}
+        </Tile>
       </div>
 
       <WeeklyPickSheet open={picking} onClose={() => setPicking(false)} existing={mine} onSaved={picks.reload} />
@@ -236,9 +255,9 @@ export default function Home() {
   )
 }
 
-function Tile({ href, ico, t, fresh, bg, children }: { href: string; ico: IconName; t: string; fresh: number; bg?: string; children: ReactNode }) {
+function Tile({ href, ico, t, fresh, bg, wide, children }: { href: string; ico: IconName; t: string; fresh: number; bg?: string; wide?: boolean; children: ReactNode }) {
   return (
-    <Link href={href} className={`tile pressable ${bg ? 'has-bg' : ''}`}>
+    <Link href={href} className={`tile pressable ${bg ? 'has-bg' : ''} ${wide ? 'wide' : ''}`}>
       {bg && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={bg} alt="" className="tile-bg" />

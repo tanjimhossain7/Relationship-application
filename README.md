@@ -14,6 +14,7 @@ A private little app for Tanzim and Azrina (together since April 22, 2024). It's
 - **Games**: Krillion, Wordle, Globle, Spotle, Spotle Movie, Connections. Paste your share text and it reads the score (or just type it). Head-to-head only counts days you both played, so skipping never costs you.
 - **Thoughtboard**: random thoughts for the other one to find, with reactions and unread badges.
 - **Eats**: favorites first, every visit, Tanzim's rating and review, Azrina's, and the average, grouped by place. Eat out back to back and it roasts you.
+- **Movies**: every movie you saw together, with posters found automatically from Wikipedia (add the year if it picks the wrong one).
 - **Streaks**: log in daily. 7, 10, 15, 20, 25 and every 30 days pop a celebration (only when you hit it).
 - **Surprises**: roughly once a week, Badtzmaru runs across the screen, it rains underpants, or Badtzmaru rides a motorcycle over Peace Bridge.
 - **Picture library** (More → only visible to Tanzim): upload pictures for each streak and surprise. Until then, emoji placeholders are used. There are also preview buttons for the surprises.
@@ -23,7 +24,7 @@ A private little app for Tanzim and Azrina (together since April 22, 2024). It's
 ### 1. Supabase (the shared database and photo storage)
 
 1. Go to [supabase.com](https://supabase.com) → **New project**. Pick any name, set a database password (you won't need it in the app), choose the region closest to you.
-2. When it's ready, open **SQL Editor → New query**, paste everything from [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), and press **Run**. Then do the same with [`0002_date_ideas.sql`](supabase/migrations/0002_date_ideas.sql). This creates all the tables and the `photos` storage bucket.
+2. When it's ready, open **SQL Editor → New query**, paste everything from [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), and press **Run**. Then do the same with [`0002_date_ideas.sql`](supabase/migrations/0002_date_ideas.sql) and [`0003_movies.sql`](supabase/migrations/0003_movies.sql). This creates all the tables and the `photos` storage bucket.
 3. Open **Project Settings → API** (or **Connect**) and keep two values handy:
    - **Project URL** (looks like `https://abcd1234.supabase.co`)
    - **anon / publishable key** (the long public one, *not* the `service_role` secret)

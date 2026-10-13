@@ -717,6 +717,10 @@ input[type='date'].input {
   overflow: hidden;
   isolation: isolate;
 }
+.tile.wide {
+  grid-column: span 2;
+  min-height: 0;
+}
 .tile-ico {
   width: 34px;
   height: 34px;
@@ -808,6 +812,42 @@ input[type='date'].input {
   background: var(--card-hi);
   color: var(--accent);
   flex: none;
+}
+
+/* ---------- movies ---------- */
+
+.posters {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 10px;
+}
+.poster {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 10px;
+  background: var(--card-hi);
+  box-shadow: 0 12px 30px -16px rgba(0, 0, 0, 0.8);
+  display: block;
+}
+.poster-empty {
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  text-align: center;
+  font-size: 15px;
+  border: 1px solid var(--line);
+}
+.poster-row {
+  display: flex;
+  gap: 6px;
+}
+.poster-row img {
+  width: 30px;
+  height: 45px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: var(--card-hi);
 }
 
 /* ---------- music showcase ---------- */
