@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 // "N new" badges on the home tiles. Each phone remembers when it last opened a
 // section; anything the other person added after that counts as new.
 
-export type Section = 'music' | 'photobooth' | 'thoughts' | 'moments' | 'games' | 'eats'
+export type Section = 'music' | 'photobooth' | 'thoughts' | 'moments' | 'games' | 'eats' | 'movies'
 
 const key = (s: Section) => `us:seen:${s}`
 
